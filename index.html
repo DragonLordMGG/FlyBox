@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FlyBox — BoxPVP Форум</title>
+  <style>
+    :root{
+      --bg:#0b0f14; --panel:#121822; --muted:#a8b3cf; --text:#e8eefc;
+      --brand:#00d19a; --brand-2:#3fb2ff; --danger:#ff6b6b; --warn:#ffb020;
+      --card:#0f1420; --shadow:rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:linear-gradient(180deg,#0b0f14, #0b0f14 40%, #0d1420);
+      color:var(--text);}
+    .app{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+    aside{background:linear-gradient(180deg,#0e1521,#0b111b);border-right:1px solid #1d2736;padding:18px 14px;}
+    main{padding:20px 24px;}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+    .logo{width:40px;height:40px;border-radius:10px;background:conic-gradient(from 180deg,var(--brand),var(--brand-2));box-shadow:0 6px 20px var(--shadow)}
+    h1{font-size:22px;margin:0}
+    .subtitle{color:var(--muted);font-size:13px}
+    .card{background:linear-gradient(180deg,#0f1624,#0e1522);border:1px solid #1c2636;border-radius:16px;box-shadow:0 10px 32px var(--shadow)}
+    .cat{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+    .cat button{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #1c2636;border-radius:12px;background:#0f1420;color:var(--text);cursor:pointer}
+    .cat button.active{outline:2px solid rgba(63,178,255,.35);background:linear-gradient(180deg,#121a2b,#0f1523)}
+    .cat .badge{margin-left:auto;background:#101a2a;border:1px solid #223147;border-radius:999px;padding:2px 8px;color:var(--muted);font-size:12px}
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+    .toolbar input[type="text"]{flex:1;min-width:220px;background:#0e1521;border:1px solid #1d2736;border-radius:12px;padding:10px;color:var(--text)}
+    .btn{border:1px solid #1d2736;background:linear-gradient(180deg,#152033,#0f1727);color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer}
+    .btn.brand{background:linear-gradient(180deg,#00d19a,#00a77c);border-color:#00a77c;color:#041810;font-weight:600}
+    .btn.ghost{background:#0f1420}
+    .btn.danger{background:linear-gradient(180deg,#ff7a7a,#ff5454);border-color:#ff4b4b;color:#230a0a}
+    .grid{display:grid;gap:12px}
+    .thread{padding:12px 14px}
+    .thread h3{margin:0 0 6px 0;font-size:17px}
+    .meta{color:var(--muted);font-size:12px}
+    .pill{display:inline-flex;gap:6px;align-items:center;border:1px solid #274059;background:#0d1a2a;border-radius:999px;padding:4px 8px;font-size:12px;color:#bcd0ff}
+    .stack{display:flex;flex-direction:column;gap:8px}
+    .divider{height:1px;background:#1c2636;margin:10px 0}
+    .hidden{display:none !important}
+    .flex{display:flex;gap:10px;flex-wrap:wrap}
+    .spacer{flex:1}
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px}
+    .modal{max-width:760px;width:100%}
+    .modal .body{padding:16px}
+    .modal .header,.modal .footer{padding:12px 16px;border-bottom:1px solid #1c2636}
+    .modal .footer{border-top:1px solid #1c2636;border-bottom:none;display:flex;gap:10px;justify-content:flex-end}
+    textarea, select{width:100%;background:#0e1521;border:1px solid #1d2736;border-radius:12px;padding:10px;color:var(--text)}
+    input[type="text"], input[type="password"], input[type="search"]{width:100%;background:#0e1521;border:1px solid #1d2736;border-radius:12px;padding:10px;color:var(--text)}
+    label{font-size:13px;color:#c7d6ff}
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-size:12px;color:#cbd6ee}
+    .empty{color:var(--muted);padding:18px;text-align:center}
+    .reply{background:#0e1521;border:1px solid #1c2636;border-radius:12px;padding:12px}
+    .small{font-size:12px;color:var(--muted)}
+    .wrap{max-width:1100px;margin:0 auto}
+    .notice{background:#0f1c12;border:1px dashed #1a3b2d;color:#9decc7;border-radius:12px;padding:10px 12px;font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <header>
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>FlyBox</h1>
+          <div class="subtitle">BoxPVP • Minecraft форум</div>
+        </div>
+      </header>
+
+      <div class="card" style="padding:12px">
+        <div class="stack">
+          <div class="pill">IP сервера: <span class="kbd">play.flybox.gg</span></div>
+          <div class="pill">Версия: <span class="kbd">1.20+</span></div>
+        </div>
+      </div>
+
+      <div class="cat" id="catList"></div>
+
+      <div class="card" style="padding:12px;margin-top:12px">
+        <div class="stack">
+          <div class="small">Экспорт / импорт данных (LocalStorage)</div>
+          <div class="flex">
+            <button class="btn" id="exportBtn">Экспорт</button>
+            <input type="file" id="importFile" class="hidden" accept="application/json" />
+            <button class="btn" id="importBtn">Импорт</button>
+          </div>
+          <div class="divider"></div>
+          <label for="modKey">Модераторский ключ (открывает удаление)</label>
+          <input type="password" id="modKey" placeholder="Введите ключ…" />
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="wrap">
+        <div class="toolbar">
+          <input type="search" id="search" placeholder="Поиск тем и сообщений…" />
+          <button class="btn brand" id="newThreadBtn">Новая тема</button>
+          <div class="spacer"></div>
+          <button class="btn ghost" id="homeBtn">Все темы</button>
+        </div>
+
+        <div id="routeList" class="grid"></div>
+        <div id="routeThread" class="hidden"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- New Thread Modal -->
+  <div class="modal-backdrop hidden" id="modalBackdrop" aria-hidden="true">
+    <div class="card modal" role="dialog" aria-modal="true">
+      <div class="header"><strong>Создать новую тему</strong></div>
+      <div class="body">
+        <div class="stack">
+          <label>Заголовок</label>
+          <input id="ntTitle" type="text" placeholder="Например: Правила раздела Жалобы" />
+          <label>Категория</label>
+          <select id="ntCategory"></select>
+          <label>Автор</label>
+          <input id="ntAuthor" type="text" placeholder="Ваш ник (например, Steve)" />
+          <label>Содержимое</label>
+          <textarea id="ntContent" rows="8" placeholder="Опишите тему… Поддерживаются лёгкие разметки: **жирный**, *курсив*, `код`."></textarea>
+        </div>
+      </div>
+      <div class="footer">
+        <button class="btn ghost" id="cancelModal">Отмена</button>
+        <button class="btn brand" id="createThread">Создать</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Utils ---
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+    const uid = () => Math.random().toString(36).slice(2)+Date.now().toString(36);
+    const nowISO = () => new Date().toISOString();
+    const fmt = iso => new Date(iso).toLocaleString();
+    const slugify = s => s.toLowerCase().replace(/[^a-z0-9а-яё\s-]/gi,'').trim().replace(/\s+/g,'-');
+
+    // --- Data ---
+    const STORAGE_KEY = 'flybox_forum_v1';
+    const DEFAULT_CATS = [
+      {id: 'news', name:'Новости и обновления', icon:'📰'},
+      {id: 'rules', name:'Правила сервера', icon:'⚖️'},
+      {id: 'apply', name:'Заявки на модератора', icon:'📝'},
+      {id: 'reports', name:'Жалобы на игроков', icon:'🚨'},
+      {id: 'bugs', name:'Репорты багов', icon:'🐞'},
+      {id: 'trade', name:'Торговля', icon:'💱'},
+      {id: 'off', name:'Оффтопик', icon:'💬'}
+    ];
+
+    const demoThreads = () => [
+      {id:uid(), title:'Добро пожаловать на FlyBox!', cat:'news', author:'Admin', created:nowISO(), content:'Это тестовая запись. Прочитайте **правила** и наслаждайтесь BoxPVP!', replies:[{id:uid(), author:'Alex', created:nowISO(), content:'Ура! Когда вайп?'},{id:uid(), author:'Admin', created:nowISO(), content:'Планируем на выходных.'}]},
+      {id:uid(), title:'[ФОРМАТ] Жалобы на игроков', cat:'reports', author:'Moderator', created:nowISO(), content:'Шаблон: \n1) Ник нарушителя\n2) Дата/время\n3) Доказательства (скрин/видео)\n4) Описание ситуации', replies:[]}
+    ];
+
+    const load = () => {
+      try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null }catch{ return null }
+    }
+    const save = (data) => localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+    let state = load() || { cats: DEFAULT_CATS, threads: demoThreads(), modKeyHash: null };
+    save(state);
+
+    // --- Mod key (client-side only mock) ---
+    const setModKey = (key) => { state.modKeyHash = key ? btoa(key) : null; save(state); render(); }
+    const isMod = () => {
+      const input = $('#modKey').value;
+      return input && state.modKeyHash && btoa(input) === state.modKeyHash;
+    }
+
+    // --- Rendering ---
+    function renderCats(){
+      const el = $('#catList');
+      el.innerHTML = '';
+      state.cats.forEach(c => {
+        const btn = document.createElement('button');
+        btn.innerHTML = `<span>${c.icon}</span><span>${c.name}</span><span class="badge">${state.threads.filter(t=>t.cat===c.id).length}</span>`;
+        btn.onclick = () => navigate(`/category/${c.id}`);
+        if(location.hash.includes(`/category/${c.id}`)) btn.classList.add('active');
+        el.appendChild(btn);
+      })
+    }
+
+    function applySearch(list){
+      const q = $('#search').value.trim().toLowerCase();
+      if(!q) return list;
+      return list.filter(t => (
+        t.title.toLowerCase().includes(q) ||
+        t.content.toLowerCase().includes(q) ||
+        t.replies.some(r=>r.content.toLowerCase().includes(q))
+      ));
+    }
+
+    function renderList(){
+      $('#routeThread').classList.add('hidden');
+      const listEl = $('#routeList');
+      listEl.classList.remove('hidden');
+      const parts = location.hash.split('/');
+      const catId = parts[2] && parts[1]==='category' ? parts[2] : null;
+      let list = state.threads.slice().sort((a,b)=>new Date(b.created)-new Date(a.created));
+      if(catId) list = list.filter(t=>t.cat===catId);
+      list = applySearch(list);
+
+      if(!list.length){ listEl.innerHTML = `<div class="card empty">Нет тем. Будьте первым!</div>`; return; }
+
+      listEl.innerHTML = '';
+      list.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'card thread';
+        const cat = state.cats.find(c=>c.id===t.cat);
+        card.innerHTML = `
+          <h3>${t.title}</h3>
+          <div class="meta">Категория: <span class="pill">${cat.icon} ${cat.name}</span> • Автор: ${t.author} • Создано: ${fmt(t.created)} • Ответов: ${t.replies.length}</div>
+          <div class="divider"></div>
+          <div class="small">${escapeHTML(t.content).slice(0,220)}${t.content.length>220?'…':''}</div>
+        `;
+        card.onclick = ()=>navigate(`/thread/${t.id}`);
+        listEl.appendChild(card);
+      });
+    }
+
+    function renderThread(id){
+      $('#routeList').classList.add('hidden');
+      const el = $('#routeThread');
+      el.classList.remove('hidden');
+      const t = state.threads.find(x=>x.id===id);
+      if(!t){ el.innerHTML = `<div class="card empty">Тема не найдена.</div>`; return; }
+      const cat = state.cats.find(c=>c.id===t.cat);
+
+      el.innerHTML = `
+        <div class="card" style="padding:16px">
+          <div class="flex" style="align-items:center">
+            <h2 style="margin:0">${t.title}</h2>
+            <span class="spacer"></span>
+            <span class="pill">${cat.icon} ${cat.name}</span>
+          </div>
+          <div class="meta" style="margin-top:4px">Автор: ${t.author} • Создано: ${fmt(t.created)}</div>
+          <div class="divider"></div>
+          <div>${renderMarkup(t.content)}</div>
+          <div class="divider"></div>
+          <div class="flex">
+            <input id="replyAuthor" type="text" placeholder="Ваш ник" style="max-width:240px" />
+            <span class="spacer"></span>
+            ${isMod()?`<button class="btn danger" id="deleteThread">Удалить тему</button>`:''}
+          </div>
+          <textarea id="replyContent" rows="4" placeholder="Напишите ответ…"></textarea>
+          <div class="flex" style="justify-content:flex-end">
+            <button class="btn brand" id="sendReply">Ответить</button>
+          </div>
+        </div>
+
+        <div class="grid" style="margin-top:12px">
+          ${t.replies.map(r => `
+            <div class="reply">
+              <div class="flex" style="align-items:center">
+                <strong>${r.author}</strong>
+                <span class="spacer"></span>
+                <span class="small">${fmt(r.created)}</span>
+                ${isMod()?`<button class="btn danger" data-rid="${r.id}" style="margin-left:8px">Удалить</button>`:''}
+              </div>
+              <div class="divider"></div>
+              <div>${renderMarkup(r.content)}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      // events
+      const replyBtn = $('#sendReply');
+      replyBtn.onclick = () => {
+        const author = $('#replyAuthor').value.trim() || 'Гость';
+        const content = $('#replyContent').value.trim();
+        if(!content) return alert('Введите сообщение');
+        t.replies.push({id:uid(), author, created:nowISO(), content});
+        save(state); renderThread(id);
+      }
+
+      if(isMod()){
+        const delThread = $('#deleteThread');
+        if(delThread) delThread.onclick = () => {
+          if(confirm('Удалить тему полностью?')){
+            state.threads = state.threads.filter(x=>x.id!==id);
+            save(state); navigate('/');
+          }
+        }
+        $$('#routeThread .reply .btn.danger').forEach(btn => btn.onclick = (e) => {
+          const rid = e.currentTarget.getAttribute('data-rid');
+          const idx = t.replies.findIndex(x=>x.id===rid);
+          if(idx>-1){ t.replies.splice(idx,1); save(state); renderThread(id); }
+        });
+      }
+    }
+
+    // --- Navigation ---
+    function navigate(path){ location.hash = '#' + path; }
+    window.addEventListener('hashchange', route);
+
+    function route(){
+      renderCats();
+      const h = location.hash.slice(1);
+      if(h.startsWith('/thread/')){ renderThread(h.split('/')[2]); }
+      else { renderList(); }
+    }
+
+    // --- Modal ---
+    const openModal = () => $('#modalBackdrop').classList.remove('hidden');
+    const closeModal = () => $('#modalBackdrop').classList.add('hidden');
+
+    function fillCatSelect(){
+      const s = $('#ntCategory'); s.innerHTML = '';
+      state.cats.forEach(c=>{
+        const o = document.createElement('option'); o.value = c.id; o.textContent = `${c.icon} ${c.name}`; s.appendChild(o);
+      })
+    }
+
+    // --- Markup (very light) ---
+    function escapeHTML(s){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+    function renderMarkup(s){
+      const e = escapeHTML(s)
+        .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g,'<em>$1</em>')
+        .replace(/`(.+?)`/g,'<code>$1</code>')
+        .replace(/\n/g,'<br>');
+      return e;
+    }
+
+    // --- Export/Import ---
+    $('#exportBtn').onclick = () => {
+      const data = JSON.stringify(state, null, 2);
+      const blob = new Blob([data], {type:'application/json'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'flybox_forum_export.json';
+      a.click();
+    }
+    $('#importBtn').onclick = () => $('#importFile').click();
+    $('#importFile').addEventListener('change', (e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          const obj = JSON.parse(reader.result);
+          if(!obj || !obj.cats || !obj.threads) throw new Error('Неверный файл');
+          state = obj; save(state); route();
+        }catch(err){ alert('Ошибка импорта: '+err.message); }
+      };
+      reader.readAsText(file);
+    });
+
+    // --- Events ---
+    $('#newThreadBtn').onclick = () => { fillCatSelect(); openModal(); };
+    $('#cancelModal').onclick = closeModal;
+    $('#createThread').onclick = () => {
+      const title = $('#ntTitle').value.trim();
+      const cat = $('#ntCategory').value; const author = $('#ntAuthor').value.trim() || 'Гость';
+      const content = $('#ntContent').value.trim();
+      if(!title || !content) return alert('Заполните заголовок и содержимое');
+      state.threads.push({id:uid(), title, cat, author, created:nowISO(), content, replies:[]});
+      save(state); closeModal(); navigate('/');
+      // очистить
+      $('#ntTitle').value=''; $('#ntContent').value='';
+    };
+
+    $('#homeBtn').onclick = () => navigate('/');
+    $('#search').addEventListener('input', ()=>route());
+    $('#modKey').addEventListener('input', ()=>{ setModKey($('#modKey').value); });
+
+    // init
+    renderCats(); route();
+  </script>
+</body>
+</html>
